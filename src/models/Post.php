@@ -152,7 +152,7 @@ class Post extends \Eloquent {
 			}, array_keys($attributes)));
 		}
 		
-		return $html;
+		return $html.'>';
 	}
 
 	/**
