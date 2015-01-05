@@ -84,12 +84,26 @@ class PostsController extends \BaseController {
 	 * @param $slug
 	 * @return mixed
 	 */
-	public function view($slug)
+	public function viewBySlug($slug)
+	{
+		return $this->view(null, null, $slug);
+	}
+	
+	/**
+	 * @param $slug
+	 * @param $year
+	 * @param $month
+	 * @return mixed
+	 */
+	public function view($year = null, $month = null, $slug)
 	{
 		// Get the selected post
-		$post = $this->post->live()
-			->where($this->post->getTable().'.slug', '=', $slug)
-			->firstOrFail();
+		$post_query = $this->post->live()->where($this->post->getTable().'.slug', '=', $slug);
+		if (\Config::get('laravel-blog::routes.view_uri_date_prefix'))
+		{
+			$post_query = $post_query->where(\DB::raw('DATE_FORMAT(published_date, "%Y%m")'), '=', $year.$month);
+		}
+		$post = $post_query->firstOrFail();
 
 		// Get the next newest and next oldest post if the config says to show these links on the view page
 		$newer = $older = false;

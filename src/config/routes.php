@@ -14,6 +14,11 @@ return array(
 	'base_uri' => 'blog',
 
 	/**
+	 * Prefix View URI With Year And Month, e.g. "/2015/01/" in http://domain.com/blog/2015/01/my-post
+	 */
+	'view_uri_date_prefix' => false,
+
+	/**
 	 * URI prefix of the blog relationship filter
 	 *
 	 * @type mixed false | string

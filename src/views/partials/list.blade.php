@@ -32,6 +32,7 @@
 		
 				<div class="item--summary">
 					{{ $post->summary }}
+					{{ $post->getUrl() }}
 				</div>
 		
 				<p class="item--more-link">

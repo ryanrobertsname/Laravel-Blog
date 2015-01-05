@@ -314,7 +314,14 @@ class Post extends \Eloquent implements SluggableInterface{
 	 */
 	public function getUrl()
 	{
-		return \URL::action('Fbf\LaravelBlog\PostsController@view', array('slug' => $this->slug));
+		if (\Config::get($this->getConfigPrefix().'routes.view_uri_date_prefix'))
+		{
+			return \URL::action('Fbf\LaravelBlog\PostsController@view', array('year' => $this->getYear(), 'month' => $this->getMonth(), 'slug' => $this->slug));
+		}
+		else
+		{	
+			return \URL::action('Fbf\LaravelBlog\PostsController@viewBySlug', array('slug' => $this->slug));
+		}
 	}
 
 	/**
@@ -375,4 +382,136 @@ class Post extends \Eloquent implements SluggableInterface{
 		return $this->configPrefix = $configBase;
 	}
 
+	/**
+	 * Return the published year
+	 * 
+	 * @return string
+	 */
+	public function getYear()
+	{
+		return date('Y', strtotime($this->published_date));
+	}
+
+	/**
+	 * Return the published month
+	 * 
+	 * @return string
+	 */
+	public function getMonth()
+	{
+		return date('m', strtotime($this->published_date));
+	}
+
+	/**
+	 * Overloads SluggableTrait method
+	 * 
+	 * @param $slug
+	 * @return string
+	 */
+	protected function makeSlugUnique($slug)
+	{
+		if (!$this->sluggable['unique']) return $slug;
+
+		if (\Config::get($this->getConfigPrefix().'routes.view_uri_date_prefix'))
+		{
+			if (empty($this->published_date))
+			{
+				throw new \RuntimeException('Published date is not set, cannot check slug uniqueness.');
+			}
+
+			$fully_qualified_slug = $this->getYear().'/'.$this->getMonth().'/'.$slug;
+		}
+		else
+		{
+
+			$fully_qualified_slug = $slug;
+		}
+
+		$separator  = $this->sluggable['separator'];
+		$use_cache  = $this->sluggable['use_cache'];
+		$save_to    = $this->sluggable['save_to'];
+
+		// if using the cache, check if we have an entry already instead
+		// of querying the database
+		if ( $use_cache )
+		{
+			$increment = \Cache::tags('sluggable')->get($fully_qualified_slug);
+			if ( $increment === null )
+			{
+				\Cache::tags('sluggable')->put($fully_qualified_slug, 0, $use_cache);
+			}
+			else
+			{
+				\Cache::tags('sluggable')->put($fully_qualified_slug, ++$increment, $use_cache);
+				$slug .= $separator . $increment;
+			}
+			return $slug;
+		}
+
+		// no cache, so we need to check directly
+		// find all models where the slug is like the current one
+		$list = $this->getExistingSlugs($slug);
+
+		// if ...
+		// 	a) the list is empty
+		// 	b) our slug isn't in the list
+		// 	c) our slug is in the list and it's for our model
+		// ... we are okay
+		if (
+			count($list)===0 ||
+			!in_array($slug, $list) ||
+			( array_key_exists($this->getKey(), $list) && $list[$this->getKey()]===$slug )
+		)
+		{
+			return $slug;
+		}
+
+
+		// map our list to keep only the increments
+		$len = strlen($slug.$separator);
+		array_walk($list, function(&$value, $key) use ($len)
+		{
+			$value = intval(substr($value, $len));
+		});
+
+		// find the highest increment
+		rsort($list);
+		$increment = reset($list) + 1;
+
+		return $slug . $separator . $increment;
+
+	}
+
+	/**
+	 * Overloads SluggableTrait method
+	 * 
+	 * @param $slug
+	 * @return array
+	 */
+	protected function getExistingSlugs($slug)
+	{
+		$save_to         = $this->sluggable['save_to'];
+		$include_trashed = $this->sluggable['include_trashed'];
+
+		$instance = new static;
+
+		$query = $instance->where( $save_to, 'LIKE', $slug.'%' );
+
+		// if posts are prefixed by pub date
+		if (\Config::get($this->getConfigPrefix().'routes.view_uri_date_prefix'))
+		{
+			$query = $query->where(\DB::raw('DATE_FORMAT(published_date, "%Y%m")'), '=', $this->getYear().$this->getMonth());
+		}
+
+		// include trashed models if required
+		if ( $include_trashed && $instance->usesSoftDeleting() )
+		{
+			$query = $query->withTrashed();
+		}
+
+		// get a list of all matching slugs
+		$list = $query->lists($save_to, $this->getKeyName());
+
+		return $list;
+	}
 }
