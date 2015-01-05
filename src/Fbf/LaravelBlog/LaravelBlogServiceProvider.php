@@ -33,7 +33,6 @@ class LaravelBlogServiceProvider extends ServiceProvider {
 		{
 			$loader = \Illuminate\Foundation\AliasLoader::getInstance();
 			$loader->alias('Fbf\LaravelBlog\Rss', 'Thujohn\Rss\RssFacade');
-			$loader->alias('Sluggable', 'Cviebrock\EloquentSluggable\Facades\Sluggable');
 		});
 
 	}
