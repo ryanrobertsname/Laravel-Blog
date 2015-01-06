@@ -84,9 +84,42 @@ class PostsController extends \BaseController {
 	 * @param $slug
 	 * @return mixed
 	 */
-	public function viewBySlug($slug)
+	public function viewWithSlug($slug)
 	{
-		return $this->view(null, null, $slug);
+		return $this->view(null, null, null, $slug);
+	}
+
+	/**
+	 * @param $year
+	 * @param $slug
+	 * @return mixed
+	 */
+	public function viewWithYear($year, $slug)
+	{
+		return $this->view($year, null, null, $slug);
+	}
+
+	/**
+	 * @param $year
+	 * @param $month
+	 * @param $slug
+	 * @return mixed
+	 */
+	public function viewWithMonth($year, $month, $slug)
+	{
+		return $this->view($year, $month, null, $slug);
+	}
+
+	/**
+	 * @param $year
+	 * @param $month
+	 * @param $day
+	 * @param $slug
+	 * @return mixed
+	 */
+	public function viewWithDay($year, $month, $day, $slug)
+	{
+		return $this->view($year, $month, $day, $slug);
 	}
 	
 	/**
@@ -95,15 +128,25 @@ class PostsController extends \BaseController {
 	 * @param $month
 	 * @return mixed
 	 */
-	public function view($year = null, $month = null, $slug)
+	public function view($year = null, $month = null, $day = null, $slug)
 	{
+		$date_prefix_config = \Config::get('laravel-blog::routes.view_uri_date_prefix');
+
 		// Get the selected post
-		$post_query = $this->post->live()->where($this->post->getTable().'.slug', '=', $slug);
-		if (\Config::get('laravel-blog::routes.view_uri_date_prefix'))
+		$query = $this->post->live()->where($this->post->getTable().'.slug', '=', $slug);
+		if ($date_prefix_config == 'year')
 		{
-			$post_query = $post_query->where(\DB::raw('DATE_FORMAT(published_date, "%Y%m")'), '=', $year.$month);
+			$query = $query->where(\DB::raw('DATE_FORMAT(published_date, "%Y")'), '=', $year);
 		}
-		$post = $post_query->firstOrFail();
+		if ($date_prefix_config == 'month')
+		{
+			$query = $query->where(\DB::raw('DATE_FORMAT(published_date, "%Y%m")'), '=', $year.$month);
+		}
+		if ($date_prefix_config == 'day')
+		{
+			$query = $query->where(\DB::raw('DATE_FORMAT(published_date, "%Y%m%d")'), '=', $year.$month.$day);
+		}
+		$post = $query->firstOrFail();
 
 		// Get the next newest and next oldest post if the config says to show these links on the view page
 		$newer = $older = false;

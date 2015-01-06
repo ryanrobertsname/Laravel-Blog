@@ -14,9 +14,17 @@ return array(
 	'base_uri' => 'blog',
 
 	/**
-	 * Prefix View URI With Year And Month, e.g. "/2015/01/" in http://domain.com/blog/2015/01/my-post
+	 * Prefix View URI With Year, Year & Month, or Year Month & Day, e.g. "/2015/01/02" in http://domain.com/blog/2015/01/02/my-post
+	 *
+	 * Options: 'year' , 'month' , 'day' , null
+	 *
+	 * Slug uniqueness will be considered with any date prefixing that is configured, 
+	 * e.g. If this is set to 'year', slug "my-post" can be duplicated if posted in different years.
+	 *
+	 * WARNING: If you have existing posts, ensure you take necessary action in ensuring that slugs are appropriately
+	 * unique upon changing this setting.
 	 */
-	'view_uri_date_prefix' => false,
+	'view_uri_date_prefix' => 'day',
 
 	/**
 	 * URI prefix of the blog relationship filter

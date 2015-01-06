@@ -41,8 +41,7 @@ class Post extends \Eloquent implements SluggableInterface{
 		'save_to' => 'slug',
 		'separator' => '-',
 		'unique' => true,
-		'include_trashed' => true,
-		'use_cache' => false
+		'include_trashed' => true
 	);
 
 	/**
@@ -314,14 +313,25 @@ class Post extends \Eloquent implements SluggableInterface{
 	 */
 	public function getUrl()
 	{
-		if (\Config::get($this->getConfigPrefix().'routes.view_uri_date_prefix'))
+		$date_prefix_config = \Config::get($this->getConfigPrefix().'routes.view_uri_date_prefix');
+
+		if ($date_prefix_config)
 		{
-			return \URL::action('Fbf\LaravelBlog\PostsController@view', array('year' => $this->getYear(), 'month' => $this->getMonth(), 'slug' => $this->slug));
+			if ($date_prefix_config == 'year')
+			{
+				return \URL::action('Fbf\LaravelBlog\PostsController@viewWithYear', array('year' => $this->getYear(), 'slug' => $this->slug));
+			}
+			if ($date_prefix_config == 'month')
+			{
+				return \URL::action('Fbf\LaravelBlog\PostsController@viewWithMonth', array('year' => $this->getYear(), 'month' => $this->getMonth(), 'slug' => $this->slug));
+			}
+			if ($date_prefix_config == 'day')
+			{
+				return \URL::action('Fbf\LaravelBlog\PostsController@viewWithDay', array('year' => $this->getYear(), 'month' => $this->getMonth(), 'day' => $this->getDay(), 'slug' => $this->slug));
+			}
 		}
-		else
-		{	
-			return \URL::action('Fbf\LaravelBlog\PostsController@viewBySlug', array('slug' => $this->slug));
-		}
+
+		return \URL::action('Fbf\LaravelBlog\PostsController@viewWithSlug', array('slug' => $this->slug));
 	}
 
 	/**
@@ -403,6 +413,16 @@ class Post extends \Eloquent implements SluggableInterface{
 	}
 
 	/**
+	 * Return the published day
+	 * 
+	 * @return string
+	 */
+	public function getDay()
+	{
+		return date('d', strtotime($this->published_date));
+	}
+
+	/**
 	 * Overloads SluggableTrait method
 	 * 
 	 * @param $slug
@@ -410,16 +430,30 @@ class Post extends \Eloquent implements SluggableInterface{
 	 */
 	protected function makeSlugUnique($slug)
 	{
+		$date_prefix_config = \Config::get($this->getConfigPrefix().'routes.view_uri_date_prefix');
+
 		if (!$this->sluggable['unique']) return $slug;
 
-		if (\Config::get($this->getConfigPrefix().'routes.view_uri_date_prefix'))
+		if ($date_prefix_config == 'year' || $date_prefix_config == 'month' || $date_prefix_config == 'day')
 		{
 			if (empty($this->published_date))
 			{
 				throw new \RuntimeException('Published date is not set, cannot check slug uniqueness.');
 			}
 
-			$fully_qualified_slug = $this->getYear().'/'.$this->getMonth().'/'.$slug;
+			$fully_qualified_slug = $this->getYear();
+
+			if ($date_prefix_config != 'year')
+			{
+				$fully_qualified_slug .= '/'.$this->getMonth();
+			}
+
+			if ($date_prefix_config == 'day')
+			{
+				$fully_qualified_slug .= '/'.$this->getDay();
+			}
+
+			$fully_qualified_slug .= '/'.$slug;
 		}
 		else
 		{
@@ -490,6 +524,8 @@ class Post extends \Eloquent implements SluggableInterface{
 	 */
 	protected function getExistingSlugs($slug)
 	{
+		$date_prefix_config = \Config::get($this->getConfigPrefix().'routes.view_uri_date_prefix');
+
 		$save_to         = $this->sluggable['save_to'];
 		$include_trashed = $this->sluggable['include_trashed'];
 
@@ -498,9 +534,20 @@ class Post extends \Eloquent implements SluggableInterface{
 		$query = $instance->where( $save_to, 'LIKE', $slug.'%' );
 
 		// if posts are prefixed by pub date
-		if (\Config::get($this->getConfigPrefix().'routes.view_uri_date_prefix'))
+		if ($date_prefix_config)
 		{
-			$query = $query->where(\DB::raw('DATE_FORMAT(published_date, "%Y%m")'), '=', $this->getYear().$this->getMonth());
+			if ($date_prefix_config == 'year')
+			{
+				$query = $query->where(\DB::raw('DATE_FORMAT(published_date, "%Y")'), '=', $this->getYear());
+			}
+			if ($date_prefix_config == 'month')
+			{
+				$query = $query->where(\DB::raw('DATE_FORMAT(published_date, "%Y%m")'), '=', $this->getYear().$this->getMonth());
+			}
+			if ($date_prefix_config == 'day')
+			{
+				$query = $query->where(\DB::raw('DATE_FORMAT(published_date, "%Y%m%d")'), '=', $this->getYear().$this->getMonth().$this->getDay());
+			}
 		}
 
 		// include trashed models if required
