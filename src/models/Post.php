@@ -132,9 +132,12 @@ class Post extends \Eloquent implements SluggableInterface{
 	 *
 	 * @param $type
 	 * @param $size
+	 * @param $attributes
+	 * @param bool $width Should width attribute be used in html
+	 * @param bool $height Should height attribute be used in html
 	 * @return null|string
 	 */
-	public function getImage($type, $size, array $attributes = array())
+	public function getImage($type, $size, array $attributes = array(), $width = true, $height = true)
 	{
 		if (empty($this->$type))
 		{
@@ -142,8 +145,14 @@ class Post extends \Eloquent implements SluggableInterface{
 		}
 		$html = '<img src="' . $this->getImageSrc($type, $size) . '"';
 		$html .= ' alt="' . $this->{$type.'_alt'} . '"';
-		$html .= ' width="' . $this->getImageWidth($type, $size) . '"';
-		$html .= ' height="' . $this->getImageHeight($type, $size) . '"';
+		if ($width)
+		{
+			$html .= ' width="' . $this->getImageWidth($type, $size) . '"';
+		}
+		if ($height)
+		{
+			$html .= ' height="' . $this->getImageHeight($type, $size) . '"';
+		}
 		
 		$html_attributes = '';
 		if (!empty($attributes)) {
