@@ -165,7 +165,7 @@ class Post extends \Eloquent implements SluggableInterface{
 			}, array_keys($attributes)));
 		}
 		
-		return $html;
+		return $html.'>';
 	}
 
 	/**
