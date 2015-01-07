@@ -3,8 +3,8 @@
 // Main default listing e.g. http://domain.com/blog
 Route::get(Config::get('laravel-blog::routes.base_uri'), 'Fbf\LaravelBlog\PostsController@index');
 
-// Archive (year / month) filtered listing e.g. http://domain.com/blog/yyyy/mm
-Route::get(Config::get('laravel-blog::routes.base_uri').'/{year}/{month}', 'Fbf\LaravelBlog\PostsController@indexByYearMonth')->where(array('year' => '\d{4}', 'month' => '\d{2}'));
+// Archive (year / month / day) filtered listing e.g. http://domain.com/blog/yyyy/mm/dd
+Route::get(Config::get('laravel-blog::routes.base_uri').'/{year}/{month?}/{day?}', ['as' => 'laravel-blog.archive', 'uses' => 'Fbf\LaravelBlog\PostsController@indexByDate'])->where(array('year' => '\d{4}', 'month' => '\d{2}', 'day' => '\d{2}'));
 
 if (Config::get('laravel-blog::routes.relationship_uri_prefix'))
 {
