@@ -57,6 +57,18 @@ class Post extends \Eloquent implements SluggableInterface{
 	}
 
 	/**
+	 * Query scope for posts published within the given year.
+	 *
+	 * @param $query
+	 * @param $year
+	 * @return mixed
+	 */
+	public function scopeByYear($query, $year)
+	{
+		return $query->where(\DB::raw('DATE_FORMAT(published_date, "%Y")'), '=', $year);
+	}
+
+	/**
 	 * Query scope for posts published within the given year and month number.
 	 *
 	 * @param $query
@@ -67,6 +79,19 @@ class Post extends \Eloquent implements SluggableInterface{
 	public function scopeByYearMonth($query, $year, $month)
 	{
 		return $query->where(\DB::raw('DATE_FORMAT(published_date, "%Y%m")'), '=', $year.$month);
+	}
+
+	/**
+	 * Query scope for posts published within the given year and month number.
+	 *
+	 * @param $query
+	 * @param $year
+	 * @param $month
+	 * @return mixed
+	 */
+	public function scopeByYearMonthDay($query, $year, $month, $day)
+	{
+		return $query->where(\DB::raw('DATE_FORMAT(published_date, "%Y%m%d")'), '=', $year.$month.$day);
 	}
 
 	/**

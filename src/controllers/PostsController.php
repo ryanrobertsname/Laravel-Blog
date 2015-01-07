@@ -37,15 +37,28 @@ class PostsController extends \BaseController {
 
 	/**
 	 * @param $selectedYear
-	 * @param $selectedMonth
+	 * @param $selectedMonth optional
+	 * @param $selectedDay optional
 	 * @return mixed
 	 */
-	public function indexByYearMonth($selectedYear, $selectedMonth)
+	public function indexByDate($selectedYear, $selectedMonth = null, $selectedDay = null)
 	{
 		// Get the selected posts
-		$posts = $this->post->live()
-			->byYearMonth($selectedYear, $selectedMonth)
-			->orderBy($this->post->getTable().'.is_sticky', 'desc')
+		$query = $this->post->live();
+			if ($selectedDay)
+			{	
+				$query->byYearMonthDay($selectedYear, $selectedMonth, $selectedDay);
+			}
+			else if ($selectedMonth)
+			{
+				$query->byYearMonth($selectedYear, $selectedMonth);
+			}
+			else
+			{
+				$query->byYear($selectedYear);
+			}
+
+		$posts = $query->orderBy($this->post->getTable().'.is_sticky', 'desc')
 			->orderBy($this->post->getTable().'.published_date', 'desc')
 			->paginate(\Config::get('laravel-blog::views.index_page.results_per_page'));
 
