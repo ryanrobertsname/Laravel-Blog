@@ -40,6 +40,41 @@ class Post extends \Eloquent {
 		'include_trashed' => true,
 	);
 
+	public static $rules = array(
+		'user_id' => 'required',
+		'title' => 'required|min:5|max:230',
+		'main_image' => 'max:255',
+		'main_image_alt' => 'max:255',
+		'you_tube_video_id' => 'max:255',
+		'status' => 'required|in:DRAFT,APPROVED',
+		'published_date' => 'required|date_format:"Y-m-d H:i:s"|date'
+	);
+
+	public $errors;
+
+	public static function boot()
+	{
+		parent::boot();
+
+		static::saving(function($self){
+
+			if (!$self->validate())
+				return false;
+
+		});
+	}
+
+	public function validate()
+	{		
+		$v = \Validator::make($this->attributes, static::$rules);
+
+		if ($v->passes()) return true;
+
+		$this->errors = $v->messages();
+
+		return false;
+	}
+
 	/**
 	 * Query scope for "live" posts, adds conditions for status = APPROVED and published date is in the past
 	 *
