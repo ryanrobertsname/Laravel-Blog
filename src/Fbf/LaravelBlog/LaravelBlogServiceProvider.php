@@ -17,7 +17,7 @@ class LaravelBlogServiceProvider extends ServiceProvider {
 	 * @return void
 	 */
 	public function boot()
-	{
+	{		
 		$this->package('fbf/laravel-blog');
 
 		if (\Config::get('laravel-blog::routes.use_package_routes', true))
