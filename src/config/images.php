@@ -27,7 +27,7 @@ return array(
 			/**
 			 * Location, relative to public_path(), where the image is stored.
 			 */
-			'dir' => '/uploads/packages/fbf/laravel-blog/main_image/original/',
+			'dir' => '/packages/fbf/laravel-blog/uploads/main_image/original/',
 
 		),
 
@@ -40,7 +40,7 @@ return array(
 			 * The thumbnail size is used on the list view
 			 */
 			'thumbnail' => array(
-				'dir' => '/uploads/packages/fbf/laravel-blog/main_image/thumbnail/',
+				'dir' => '/packages/fbf/laravel-blog/uploads/main_image/thumbnail/',
 				'method' => 'crop',
 				'width' => 150,
 				'height' => 150,
@@ -50,7 +50,7 @@ return array(
 			 * The resized size is used on the details view
 			 */
 			'resized' => array(
-				'dir' => '/uploads/packages/fbf/laravel-blog/main_image/resized/',
+				'dir' => '/packages/fbf/laravel-blog/uploads/main_image/resized/',
 				'method' => 'crop',
 				'width' => 400,
 				'height' => 400,
